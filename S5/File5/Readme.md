@@ -14,7 +14,7 @@ Link to colab : https://colab.research.google.com/drive/1ulqQlvEnpxvYdn47PX1DwzC
 
 > Best Train Accuracy: 98.57%
 
-> Best Test Accuracy: 99.40%
+> Best Test Accuracy: 99.41%
 
 **Analysis**:
 
