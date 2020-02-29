@@ -8,7 +8,7 @@
 
 ![](https://raw.githubusercontent.com/genigarus/EVA4/master/S6/Assets/visualization/l2_val_acc_comparison.png)
 
-From the above graphs, we can se that for decay rate of 0.00001 and 0.0001, the validation loss is quite low and very smooth. So, 0.00001(1e-5) is taken as decay rate value. 
+From the above graphs, we can see that for decay rate of 0.00001 and 0.0001, the validation loss is quite low and very smooth. So, 0.00001(1e-5) is taken as decay rate value. 
 
 ---
 
