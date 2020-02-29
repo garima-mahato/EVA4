@@ -1,3 +1,5 @@
+**Colab Link to notebook** - https://colab.research.google.com/drive/1WIf4kRDwKZSW-ir9_vLO9iTjXbTJK2l5
+
 **Effect of Regularization on Validation Accuracy**
 
 ![acc](https://raw.githubusercontent.com/genigarus/EVA4/master/S6/Assets/visualization/val_acc_comparison.png)
