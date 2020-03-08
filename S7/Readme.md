@@ -13,7 +13,7 @@
 
 6) Used GAP and added FC after GAP to target number of classes
 
-7) Best Test Accuracy = 85.3%, number of epochs = 50, Total Params = 906,528. 
+7) Best Test Accuracy = 85.3%, Final Test accuracy = 84.73%, number of epochs = 50, Total Params = 906,528. 
 
 8) Used image augmentation
 
