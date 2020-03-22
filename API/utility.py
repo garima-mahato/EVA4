@@ -64,37 +64,83 @@ def visualize_save_comparison_graph(EPOCHS, dict_list, title, xlabel, ylabel, PA
   plt.savefig(PATH+"/visualization/"+name+".png")
 
 # view and save misclassified images
-def show_save_misclassified_images(model, test_loader, name="fig", max_misclassified_imgs=25):
-  cols = 5
-  rows = math.ceil(max_misclassified_imgs / cols)
-  
+def classify_images(model, test_loader, device, max_imgs=25):
+  misclassified_imgs = []
+  correct_imgs = []
+    
   with torch.no_grad():
     ind = 0
     for data, target in test_loader:
       data, target = data.to(device), target.to(device)
       output = model(data)
       pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
-      misclassified_imgs_pred = pred[pred.eq(target.view_as(pred))==False]
-      
-      misclassified_imgs_data = data[pred.eq(target.view_as(pred))==False]
-      misclassified_imgs_target = target[(pred.eq(target.view_as(pred))==False).view_as(target)]
-      if ind == 0:
-        example_data, example_targets, example_preds = misclassified_imgs_data, misclassified_imgs_target, misclassified_imgs_pred
-      elif example_data.shape[0] < max_misclassified_imgs:
-        example_data = torch.cat([example_data, misclassified_imgs_data], dim=0)
-        example_targets = torch.cat([example_targets, misclassified_imgs_target], dim=0)
-        example_preds = torch.cat([example_preds, misclassified_imgs_pred], dim=0)
-      else:
-        break
-      ind += 1
-    example_data, example_targets, example_preds = example_data[:max_misclassified_imgs], example_targets[:max_misclassified_imgs], example_preds[:max_misclassified_imgs]
 
+      misclassified_imgs_pred = pred[pred.eq(target.view_as(pred))==False]
+      misclassified_imgs_indexes = (pred.eq(target.view_as(pred))==False).nonzero()[:,0]
+      for mis_ind in misclassified_imgs_indexes:
+        if len(misclassified_imgs) == max_imgs:
+          break
+        misclassified_imgs.append({
+            "target": target[mis_ind].cpu().numpy(),
+            "pred": pred[mis_ind][0].cpu().numpy(),
+            "img": data[mis_ind]
+        })
+
+      correct_imgs_pred = pred[pred.eq(target.view_as(pred))==True]
+      correct_imgs_indexes = (pred.eq(target.view_as(pred))==True).nonzero()[:,0]
+      for ind in correct_imgs_indexes:
+        if len(correct_imgs) == max_imgs:
+          break
+        correct_imgs.append({
+            "target": target[ind].cpu().numpy(),
+            "pred": pred[ind][0].cpu().numpy(),
+            "img": data[ind]
+        })
+      
+      return misclassified_imgs, correct_imgs
+
+def plot_images(images, PATH, name="fig", is_cifar10 = True):
+  cols = 5
+  rows = math.ceil(len(images) / cols)
+  CIFAR10_CLASS_LABELS = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
   fig = plt.figure(figsize=(20,10))
-  for i in range(max_misclassified_imgs):
+
+  for i in range(len(images)):
+    img = denormalize(images[i]["img"])
     plt.subplot(rows,cols,i+1)
     plt.tight_layout()
-    plt.imshow(example_data[i].cpu().numpy(), cmap='gray', interpolation='none')
-    plt.title(f"{i+1}) Ground Truth: {example_targets[i]},\n Prediction: {example_preds[i]}")
+    plt.imshow(numpy.transpose(img.cpu().numpy(), (1, 2, 0)), cmap='gray', interpolation='none')
+    if is_cifar10:
+      plt.title(f"{i+1}) Ground Truth: {CIFAR10_CLASS_LABELS[images[i]['target']]},\n Prediction: {CIFAR10_CLASS_LABELS[images[i]['pred']]}")
+    else:
+      plt.title(f"{i+1}) Ground Truth: {images[i]['target']},\n Prediction: {images[i]['pred']}")
     plt.xticks([])
     plt.yticks([])
-  plt.savefig(PATH+"/visualization/"+name+".png")
+  plt.savefig(PATH+"/visualization/"+str(name)+".png")
+
+def show_save_misclassified_images(model, test_loader, device, PATH, name="fig", max_misclassified_imgs=25):
+  misclassified_imgs, _ = classify_images(model, test_loader, device, max_misclassified_imgs)
+  plot_images(misclassified_imgs, PATH, name)
+
+def show_save_correctly_classified_images(model, test_loader, device, PATH, name="fig", max_correctly_classified_images_imgs=25):
+  _, correctly_classified_images = classify_images(model, test_loader, device, max_correctly_classified_images_imgs)
+  plot_images(correctly_classified_images, PATH, name)
+
+def denormalize(tensor, mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]):
+  single_img = False
+  if tensor.ndimension() == 3:
+    single_img = True
+    tensor = tensor[None,:,:,:]
+
+  if not tensor.ndimension() == 4:
+    raise TypeError('tensor should be 4D')
+
+  mean = torch.FloatTensor(mean).view(1, 3, 1, 1).expand_as(tensor).to(tensor.device)
+  std = torch.FloatTensor(std).view(1, 3, 1, 1).expand_as(tensor).to(tensor.device)
+  ret = tensor.mul(std).add(mean)
+  return ret[0] if single_img else ret
+
+def imshow(img):
+	img = denormalize(img)
+	npimg = img.numpy()
+	plt.imshow(numpy.transpose(npimg, (1, 2, 0)))

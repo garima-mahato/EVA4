@@ -10,15 +10,44 @@ from torch.optim.lr_scheduler import StepLR
 import matplotlib.pyplot as plt
 from torchsummary import summary
 from tqdm import tqdm
+from albumentations import *
+from albumentations.pytorch import ToTensor
 
-def generate_train_test_loader(data_path, SEED, means, stdevs):
-  # Train Phase transformations
-  train_transforms = transforms.Compose([
+# custom transformations from albumentations library
+class AlbumentationTransformations():
+  def __init__(self, means, stdevs):
+    self.means = numpy.array(means)
+    self.stdevs = numpy.array(stdevs)
+    patch_size = 28
+    self.album_transforms = Compose([
+      RandomSizedCrop((patch_size,patch_size), patch_size,patch_size),
+      HorizontalFlip(p = 0.5),
+	  Cutout(num_holes=1, max_h_size=16, max_w_size=16, p=0.75),
+      Normalize(mean=means, std=stdevs),
+      ToTensor()
+    ])
+        
+  def __call__(self, img):
+      img = numpy.array(img)
+      img = self.album_transforms(image=img)['image']
+      return img
+
+
+def augment_data(means, stdevs):
+  transformations = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize(means, stdevs),
+    transforms.Normalize(means, stdevs)
   ])
+  return transformations
+
+def generate_train_test_loader(data_path, SEED, means, stdevs, is_albumentation=False):
+  # Train Phase transformations
+  if is_albumentation:
+    train_transforms = AlbumentationTransformations(means, stdevs)
+  else:
+    train_transforms = augment_data(means, stdevs)
 
   # Test Phase transformations
   test_transforms = transforms.Compose([
