@@ -1,6 +1,10 @@
 # Classification on CIFAR10 using ResNet18 with hyperparameter tuning
 ---
 
+[Github Link to code](https://github.com/genigarus/EVA4/blob/master/S10/EVA4_Session10.ipynb)
+
+[Colab Link to code](https://colab.research.google.com/drive/1-ciM_PB0V9dACZEOxtz7BLjbzD18bpIM)
+
 ### 1) Image Augmentation used with CutOut being one of the transformation
 
 ![Image Augmentation](https://raw.githubusercontent.com/genigarus/EVA4/master/S10/visualization/transformations.PNG)
