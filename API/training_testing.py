@@ -52,7 +52,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch, train_losses
     train_acc.append(100*correct/processed)
 
 	
-def test(model, device, criterion, test_loader, test_losses, test_acc):
+def test(model, device, criterion, test_loader, test_losses, test_acc, scheduler=None):
     model.eval()
     test_loss = 0
     correct = 0
@@ -63,8 +63,10 @@ def test(model, device, criterion, test_loader, test_losses, test_acc):
             test_loss += criterion(output, target).item()  # sum up batch loss
             pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
-
+	
     test_loss /= len(test_loader.dataset)
+    if scheduler is not None:
+		    scheduler.step(test_loss)
     test_losses.append(test_loss)
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(

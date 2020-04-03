@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 from torchsummary import summary
 from tqdm import tqdm
 
-def find_cifar10_normalization_values():
+def find_cifar10_normalization_values(data_path='./data'):
   num_of_inp_channels = 3
   simple_transforms = transforms.Compose([
                                         transforms.ToTensor()
                                        ])
-  exp = datasets.CIFAR10('./data', train=True, download=True, transform=simple_transforms)
+  exp = datasets.CIFAR10(data_path, train=True, download=True, transform=simple_transforms)
   data = exp.data
   data = data.astype(numpy.float32)/255
   means = ()
@@ -43,6 +43,19 @@ def visualize_graph(train_losses, train_acc, test_losses, test_acc):
   axs[0, 1].set_title("Test Loss")
   axs[1, 1].plot(test_acc)
   axs[1, 1].set_title("Test Accuracy")
+
+def visualize_save_train_vs_test_graph(EPOCHS, dict_list, title, xlabel, ylabel, PATH, name="fig"):
+  plt.figure(figsize=(20,10))
+  #epochs = range(1,EPOCHS+1)
+  for label, item in dict_list.items():
+    x = numpy.linspace(1, EPOCHS+1, len(item))
+    plt.plot(x, item, label=label)
+  
+  plt.title(title)
+  plt.xlabel(xlabel)
+  plt.ylabel(ylabel)
+  plt.legend()
+  plt.savefig(PATH+"/"+name+".png")
 
 def set_device():
   use_cuda = torch.cuda.is_available()
@@ -78,31 +91,29 @@ def classify_images(model, test_loader, device, max_imgs=25):
       misclassified_imgs_pred = pred[pred.eq(target.view_as(pred))==False]
       misclassified_imgs_indexes = (pred.eq(target.view_as(pred))==False).nonzero()[:,0]
       for mis_ind in misclassified_imgs_indexes:
-        if len(misclassified_imgs) == max_imgs:
-          break
-        misclassified_imgs.append({
-            "target": target[mis_ind].cpu().numpy(),
-            "pred": pred[mis_ind][0].cpu().numpy(),
-            "img": data[mis_ind]
-        })
-
+        if len(misclassified_imgs) < max_imgs:
+          misclassified_imgs.append({
+              "target": target[mis_ind].cpu().numpy(),
+              "pred": pred[mis_ind][0].cpu().numpy(),
+              "img": data[mis_ind]
+          })
+    
+	#for data, target in test_loader:
       correct_imgs_pred = pred[pred.eq(target.view_as(pred))==True]
       correct_imgs_indexes = (pred.eq(target.view_as(pred))==True).nonzero()[:,0]
       for ind in correct_imgs_indexes:
-        if len(correct_imgs) == max_imgs:
-          break
-        correct_imgs.append({
-            "target": target[ind].cpu().numpy(),
-            "pred": pred[ind][0].cpu().numpy(),
-            "img": data[ind]
-        })
+        if len(correct_imgs) < max_imgs:
+          correct_imgs.append({
+              "target": target[ind].cpu().numpy(),
+              "pred": pred[ind][0].cpu().numpy(),
+              "img": data[ind]
+          })
       
-      return misclassified_imgs, correct_imgs
+  return misclassified_imgs, correct_imgs
 
-def plot_images(images, PATH, name="fig", is_cifar10 = True):
+def plot_images(images, PATH, name="fig", sub_folder_name="/visualization", is_cifar10 = True):
   cols = 5
   rows = math.ceil(len(images) / cols)
-  CIFAR10_CLASS_LABELS = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
   fig = plt.figure(figsize=(20,10))
 
   for i in range(len(images)):
@@ -111,12 +122,13 @@ def plot_images(images, PATH, name="fig", is_cifar10 = True):
     plt.tight_layout()
     plt.imshow(numpy.transpose(img.cpu().numpy(), (1, 2, 0)), cmap='gray', interpolation='none')
     if is_cifar10:
+      CIFAR10_CLASS_LABELS = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
       plt.title(f"{i+1}) Ground Truth: {CIFAR10_CLASS_LABELS[images[i]['target']]},\n Prediction: {CIFAR10_CLASS_LABELS[images[i]['pred']]}")
     else:
       plt.title(f"{i+1}) Ground Truth: {images[i]['target']},\n Prediction: {images[i]['pred']}")
     plt.xticks([])
     plt.yticks([])
-  plt.savefig(PATH+"/visualization/"+str(name)+".png")
+  plt.savefig(PATH+sub_folder_name+"/"+str(name)+".png")
 
 def show_save_misclassified_images(model, test_loader, device, PATH, name="fig", max_misclassified_imgs=25):
   misclassified_imgs, _ = classify_images(model, test_loader, device, max_misclassified_imgs)

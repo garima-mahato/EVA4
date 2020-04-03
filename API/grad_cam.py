@@ -102,11 +102,9 @@ class VisualizeCam(object):
 	    result = result.div(result.max()).squeeze()
 	    return heatmap, result
 
-	def plot_heatmaps(self, img_data, target_class, img_name):
-		fig, axs = plt.subplots(nrows=2, ncols=5, figsize=(10, 4),
-			subplot_kw={'xticks': [], 'yticks': []})
-		fig.suptitle('GradCam for class: %s' % 
-			target_class, fontsize=13, weight='medium', y=1.05)
+	def plot_heatmaps(self, img_data, target_class, img_name, nrows=2, ncols=5, figsize_height=10, figsize_width=4):
+		fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(figsize_height, figsize_width), subplot_kw={'xticks': [], 'yticks': []})
+		fig.suptitle('GradCam for class: %s' %target_class, fontsize=13, weight='medium', y=1.05)
 
 		for ax, data in zip(axs.flat, img_data):
 			img = data["img"]
@@ -116,6 +114,32 @@ class VisualizeCam(object):
 
 		plt.savefig(img_name)
 
+	def plot_img_heatmap(self, images, target_layers, PATH, target_inds=None, metric="", name="fig", columns=5, figsize_height=10, figsize_width=15):
+		pred_images = []
+		for i in range(len(images)):
+			pred_images.append(torch.as_tensor(images[i]["img"]))
+		pred_images = torch.stack(pred_images)
+		masks_map, pred = self.gcam(pred_images, target_layers, target_inds)
+		
+		rows = math.ceil(len(images) / columns)
+		fig, axs = plt.subplots(nrows=rows, ncols=columns, figsize=(figsize_width, figsize_height), subplot_kw={'xticks': [], 'yticks': []})
+		fig.suptitle('GradCam for %s misclassified images' %len(images), fontsize=15, weight='medium', y=1.05)
+		fig.subplots_adjust(hspace = 0.5)
+		
+		i = 0
+		for ax,_ in zip(axs.flat, images):
+			img = images[i]["img"]
+			mask = masks_map[target_layers[len(target_layers)-1]][i]
+			heatmap, _ = self.visualize_cam(mask, img)
+			img = denormalize(img)
+			img = np.transpose(img.cpu().numpy(), (1, 2, 0))
+			heatmap = np.transpose(heatmap.cpu().numpy(), (1, 2, 0))
+			superimposed_img = cv2.addWeighted(img, 1.0, heatmap, 0.4, 0)
+			ax.imshow(superimposed_img)
+			ax.set_title(f"{i+1}) Ground Truth: {self.classes[images[i]['target']]},\n Prediction: {self.classes[images[i]['pred']]}", fontsize=8)
+			i = i + 1
+
+		plt.savefig(PATH+"/"+str(name)+".png")	
 
 	def __call__(self, images, target_layers, PATH, target_inds=None, metric=""):
 		masks_map, pred = self.gcam(images, target_layers, target_inds)
@@ -133,7 +157,7 @@ class VisualizeCam(object):
 				mask = masks_map[layer][i]
 				heatmap, result = self.visualize_cam(mask, img)
 				results_data.append({
-					"img": result,
+					"img": denormalize(result),
 					"label": layer
 				})
 				heatmaps_data.append({
@@ -141,5 +165,5 @@ class VisualizeCam(object):
 					"label": layer
 				})
 			pred_class = self.classes[pred[i][0]]
-			fname = PATH + "gradcam_%s_%s_%s.png" % (metric, i, pred_class)
+			fname = PATH + "/gradcam_%s_%s_%s.png" % (metric, i, pred_class)
 			self.plot_heatmaps(results_data+heatmaps_data, pred_class, fname)
