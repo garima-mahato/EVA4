@@ -2,14 +2,9 @@ from __future__ import print_function
 import math
 import numpy
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+import torchvision
 from torchvision import datasets, transforms
-from torch.optim.lr_scheduler import StepLR
 import matplotlib.pyplot as plt
-from torchsummary import summary
-from tqdm import tqdm
 
 def find_cifar10_normalization_values(data_path='./data'):
   num_of_inp_channels = 3
@@ -37,7 +32,7 @@ def visualize_graph(train_losses, train_acc, test_losses, test_acc):
   fig, axs = plt.subplots(2,2,figsize=(15,10))
   axs[0, 0].plot(train_losses)
   axs[0, 0].set_title("Training Loss")
-  axs[1, 0].plot(train_acc[4000:])
+  axs[1, 0].plot(train_acc)
   axs[1, 0].set_title("Training Accuracy")
   axs[0, 1].plot(test_losses)
   axs[0, 1].set_title("Test Loss")
@@ -156,3 +151,12 @@ def imshow(img):
 	img = denormalize(img)
 	npimg = img.numpy()
 	plt.imshow(numpy.transpose(npimg, (1, 2, 0)))
+
+def show_sample_images(train_loader, labels_list, num_imgs=5):
+	# get some random training images
+	dataiter = iter(train_loader)
+	images, labels = dataiter.next()
+	# show images
+	imshow(torchvision.utils.make_grid(images[:num_imgs]))
+	# print labels
+	print(' '.join('%5s' % labels_list[labels[j]] for j in range(num_imgs)))

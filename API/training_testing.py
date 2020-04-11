@@ -12,7 +12,11 @@ from torchsummary import summary
 from tqdm import tqdm
 from regularization import *
 
-def train(model, device, train_loader, optimizer, criterion, epoch, train_losses, train_acc, l1=False, lambda1=0.0005):
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+
+def train(model, device, train_loader, optimizer, criterion, epoch, train_losses, train_acc, l1=False, lambda1=0.0005, is_ocp=False, scheduler=None):
   model.train()
   pbar = tqdm(train_loader)
   correct = 0
@@ -41,6 +45,9 @@ def train(model, device, train_loader, optimizer, criterion, epoch, train_losses
     # Backpropagation
     loss.backward()
     optimizer.step()
+
+    if is_ocp and scheduler is not None:
+		    scheduler.step()
 
     # Update pbar-tqdm
     
