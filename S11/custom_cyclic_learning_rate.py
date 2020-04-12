@@ -2,7 +2,6 @@ from __future__ import print_function
 import math
 import numpy
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 
 def visualize_save_graph_matplotlib(lines, title, xaxis_title, yaxis_title, path, name):
   plt.figure(figsize=(20,10))
