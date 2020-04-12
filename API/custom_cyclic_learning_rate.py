@@ -4,17 +4,6 @@ import numpy
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-def display_graph_plotly(lines, title, xaxis_title, yaxis_title):
-  fig = go.Figure()
-  for line in lines:
-    fig.add_trace(go.Scatter(x=line['x'], y=line['y'], mode='lines', name=line['name']))
-  # Edit the layout
-  fig.update_layout(title=title,
-                   xaxis_title=xaxis_title,
-                   yaxis_title=yaxis_title)
-  fig.show()
-  #fig.write_image("drive/EVA4/Session11/visualization/clr_graph.png")
-
 def visualize_save_graph_matplotlib(lines, title, xaxis_title, yaxis_title, path, name):
   plt.figure(figsize=(20,10))
   for line in lines:
