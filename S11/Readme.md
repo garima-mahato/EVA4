@@ -3,7 +3,8 @@
 [custom_cyclic_learning_rate](https://github.com/genigarus/EVA4/blob/master/S11/custom_cyclic_learning_rate.py) contains code for graph.
 
 Below is the graph created by the code:
-```from custom_cyclic_learning_rate import *
+```
+from custom_cyclic_learning_rate import *
 
 lr_min, lr_max, step_size, max_iteration, path, name = 0.08, 0.8, 10, 100, PATH+"/visualization", "clr_graph"
 generate_cyclic_learning_rate(lr_min, lr_max, step_size, max_iteration, path, name)
