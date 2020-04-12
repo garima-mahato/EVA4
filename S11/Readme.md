@@ -10,6 +10,8 @@ lr_min, lr_max, step_size, max_iteration, path, name = 0.08, 0.8, 10, 100, PATH+
 generate_cyclic_learning_rate(lr_min, lr_max, step_size, max_iteration, path, name)
 ```
 
+The entire code is in [EVA4_Session11_CLR](https://github.com/genigarus/EVA4/blob/master/S11/EVA4_Session11_CLR.ipynb) file.
+
 ![](https://raw.githubusercontent.com/genigarus/EVA4/master/S11/visualization/clr_graph.png)
 
 
