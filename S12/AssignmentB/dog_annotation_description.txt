@@ -1,0 +1,43 @@
+Description of Annotation JSON file
+-----------------------------------
+
+1) The annotation file is in JSON format where the number of items is equal to the number of images annotated.
+2) Each item of the JSON, which corresponds to each image, is a key-value pair where key is the unique id given to the corresponding image's annotation and value is its annotation details.
+
+Below is the example of each item:
+
+"dog1.jpg129986": {
+    "filename": "dog1.jpg",
+    "size": 129986,
+    "regions": [
+      {
+        "shape_attributes": {
+          "name": "rect",
+          "x": 626,
+          "y": 144,
+          "width": 502,
+          "height": 618
+        },
+        "region_attributes": {
+          "class": "dog"
+        }
+      }
+    ],
+    "file_attributes": {
+      "image_width": "1280",
+      "image_height": "853"
+    }
+  }
+
+"dog1.jpg129986" is the key for this image's annotation entry. This unique id is formed by combining file name and file size of image.
+The value of this entry is "dog1" image's annotation details which is a dictionary.
+
+3) The value dictionary of single image item contains:
+	a) filename - This stores the name of the image file as string. In this example, since the file's name was "dog1.jpg", it got stored here.
+	b) size - This stores size of the image in bytes as integer. The file size of "dog1.jpg" was 129986 bytes.
+	c) regions - This is a list/array of all the bounding boxes annotated within that single image.
+		* Each item in this list corresponds to 1 boundary box which is a dictionary. This dictionary consists of key-value pair denoting:
+			i) shape_attributes - It is a dictionary containing details about 
+			ii) region_attributes - 
+	d) file_attributes - This is a dictionary of all the variables defined as file attributes during annotation. The key-value pair in this dictionary is defined by the user. Here, I stored "image_width" denoting the image's width and "image_height" denoting the image's height. In this example, image height is 853px and width is 1280px.
+	
