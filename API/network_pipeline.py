@@ -7,7 +7,7 @@ from grad_cam import *
 from torch_lr_finder import *
 
 class NetworkPipeline():
-    def __init__(self, data_path, inp_size, seed, means, stdevs, need_albumentation, batch_size, labels_list, model_name, criterion, optimizer_name, scheduler_name, dropout=0):
+    def __init__(self, data_path, inp_size, seed, means, stdevs, need_albumentation, batch_size, labels_list, model_name, criterion, optimizer_name, scheduler_name=None, dropout=0, num_classes=10, train_loader=None, test_loader=None, is_custom=False, test_data_path=None):
       self.available_models = {"Net": Net, "Quiz9_DNN_Net": Quiz9_DNN_Net, "ResNet18": ResNet18, "ResNet34": ResNet34, "ResNet50": ResNet50, "ResNet101": ResNet101, "ResNet152": ResNet152, "CustomResNet": CustomResNet, "CustomResidualNet": CustomResidualNet}
       self.available_optimizers = {"SGD": optim.SGD, "Adam": optim.Adam}
       self.available_schedulers = {"OneCycleLR": torch.optim.lr_scheduler.OneCycleLR}
@@ -15,17 +15,29 @@ class NetworkPipeline():
       self.device = set_device()
       self.batch_size = batch_size
       self.labels_list = labels_list
+      self.num_classes = num_classes
       print("\n Generating train and test loaders.....")
-      self.train_loader, self.test_loader = generate_train_test_loader(data_path, self.seed, means, stdevs, need_albumentation, batch_size=self.batch_size)
+      if train_loader is None and test_loader is None:
+        self.train_loader, self.test_loader = generate_train_test_loader(data_path, self.seed, means, stdevs, need_albumentation, batch_size=self.batch_size, is_custom=is_custom, test_data_path=test_data_path)
+      else:
+        if train_loader is not None:
+          self.train_loader = train_loader
+        if test_loader is not None:
+          self.test_loader = test_loader
       self.model_name = model_name
       self.dropout = dropout
-      if self.model_name not in ("Net", "Quiz9_DNN_Net"):
+      if self.model_name not in ("Net", "Quiz9_DNN_Net", "ResNet18", "ResNet34", "ResNet50", "ResNet101", "ResNet152"):
         self.model = self.available_models[self.model_name]().to(self.device)
+      elif self.model_name in ("ResNet18", "ResNet34", "ResNet50", "ResNet101", "ResNet152"):
+        self.model = self.available_models[self.model_name](self.num_classes).to(self.device)
       else:
         self.model = self.available_models[self.model_name](self.dropout).to(self.device)
       self.criterion = criterion
       self.optimizer_name = self.available_optimizers[optimizer_name]
-      self.scheduler_name = self.available_schedulers[scheduler_name]
+      if scheduler_name is not None and scheduler_name in self.available_schedulers.keys():
+        self.scheduler_name = self.available_schedulers[scheduler_name]
+      else:
+        self.scheduler_name = None
       self.optimizer = None
       self.scheduler = None
       self.train_losses = []
@@ -54,14 +66,15 @@ class NetworkPipeline():
       else:
         raise Exception("Defined only for SGD Optimizer")
 
-    def build_network(self, optim_params, scheduler_params):
+    def build_network(self, optim_params, scheduler_params=None):
         print("Creating model...")
         print("\n Model Summary:")
         self.model = self.model.to(self.device)
         summary(self.model, input_size=self.inp_size)
 		
         self.optimizer = self.optimizer_name(self.model.parameters(), **optim_params)##optim.SGD(self.model.parameters(), lr=LRMIN, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
-        self.scheduler = self.scheduler_name(self.optimizer, **scheduler_params)
+        if self.scheduler_name is not None:
+          self.scheduler = self.scheduler_name(self.optimizer, **scheduler_params)
 		#torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=LRMAX, steps_per_epoch=NUM_OF_BATCHES, epochs=EPOCHS, pct_start=PCT_START, anneal_strategy="linear")#, div_factor=DIV_FACTOR, final_div_factor=FINAL_DIV_FACTOR)
     
     def train_network(self, epochs, is_ocp=True):

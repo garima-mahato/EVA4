@@ -52,7 +52,7 @@ class CustomResNet(nn.Module):
             nn.Conv2d(in_channels=self.num_of_channels, out_channels=self.number_of_kernels[0], kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(self.number_of_kernels[0]),
 			nn.ReLU()
-        ) # input_size = 32x32x3, output_size = 32x32x32, RF = 3x3
+        ) # input_size = 32x32x3, output_size = 32x32x64, RF = 3x3
 
         # LAYER 1
         self.layer1_x = nn.Sequential(
@@ -60,12 +60,11 @@ class CustomResNet(nn.Module):
             nn.MaxPool2d(2, 2),
 			nn.BatchNorm2d(self.number_of_kernels[1]),
             nn.ReLU()
-        ) # input_size = 32x32x32, output_size = 32x32x64, RF = 5x5
-        #self.layer1_pool1 = nn.MaxPool2d(2, 2) # input_size = 32x32x32, output_size = 16x16x32, RF = 8x8
+        ) # input_size = 32x32x64, output_size = 32x32x128, RF = 5x5
 		
         # RESIDUAL BLOCK 1
         self.resblock1 = ResBlock(in_channels=self.number_of_kernels[1], out_channels=self.number_of_kernels[2], kernel_size=(3,3), padding=1)
-		# input_size = 32x32x128, output_size = 32x32x32, RF = 7x7
+		# input_size = 32x32x128, output_size = 32x32x128, RF = 5x5, 9x9
         
         # LAYER 2
         self.layer2 = nn.Sequential(
@@ -73,7 +72,7 @@ class CustomResNet(nn.Module):
             nn.MaxPool2d(2, 2),
 			nn.BatchNorm2d(self.number_of_kernels[3]),
             nn.ReLU()
-        ) # input_size = 16x16x32, output_size = 16x16x64, RF = 12x12
+        ) # input_size = 32x32x128, output_size = 16x16x256, RF = 8x8, 12x12
 		
         # LAYER 3
         self.layer3_x = nn.Sequential(
@@ -81,19 +80,18 @@ class CustomResNet(nn.Module):
             nn.MaxPool2d(2, 2),
 			nn.BatchNorm2d(self.number_of_kernels[4]),
             nn.ReLU()
-        ) # input_size = 32x32x32, output_size = 32x32x64, RF = 5x5
-        #self.layer1_pool1 = nn.MaxPool2d(2, 2) # input_size = 32x32x32, output_size = 16x16x32, RF = 8x8
+        ) # input_size = 16x16x256, output_size = 8x8x512, RF = 
 		
         # RESIDUAL BLOCK 1
         self.resblock2 = ResBlock(in_channels=self.number_of_kernels[4], out_channels=self.number_of_kernels[5], kernel_size=(3,3), padding=1)
-		# input_size = 32x32x128, output_size = 32x32x32, RF = 7x7
+		# input_size = 8x8x512, output_size = 8x8x512, RF = 
         
         # OUTPUT LAYER
-        self.max_pool = nn.MaxPool2d(4, 2) # input_size = 32x32x32, output_size = 16x16x32, RF = 8x8
+        self.max_pool = nn.MaxPool2d(4, 2) # input_size = 8x8x512, output_size = 1x1x512, RF = 
 		
         self.fc_layer = nn.Sequential(
             nn.Conv2d(in_channels=self.number_of_kernels[5], out_channels=self.num_of_op_channels, kernel_size=(1, 1), padding=0, bias=False)
-        ) # input_size = 1x1x32, output_size = 1x1x10, RF = 102x102 
+        ) # input_size = 1x1x512, output_size = 1x1x10, RF =  
 
 
     def forward(self, inp):
