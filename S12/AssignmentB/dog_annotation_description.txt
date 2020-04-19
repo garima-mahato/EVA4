@@ -37,7 +37,12 @@ The value of this entry is "dog1" image's annotation details which is a dictiona
 	b) size - This stores size of the image in bytes as integer. The file size of "dog1.jpg" was 129986 bytes.
 	c) regions - This is a list/array of all the bounding boxes annotated within that single image.
 		* Each item in this list corresponds to 1 boundary box which is a dictionary. This dictionary consists of key-value pair denoting:
-			i) shape_attributes - It is a dictionary containing details about 
-			ii) region_attributes - 
+			i) shape_attributes - It is a dictionary containing details about the shape used to draw the bounding box. It consists of following details:
+				* name - denoting name of the shape used. In this example, since a rectangle was used to draw the bounding box, "rect" is stored.
+				* x - denoting bottom-left x index of bounding box. In this example, bounding box left-bottom was at 626px on X-axis.
+				* y - denoting bottom-left y index of bounding box. In this example, bounding box left-bottom was at 144px on Y-axis.
+				* width - denoting width bounding box. In this example, bounding box width was at 502px.
+				* height - denoting height of bounding box. In this example, bounding box height was at 618px.
+			ii) region_attributes - It is a dictionary containing user-defined variables about the boundary box where key denotes variable name and value denotes its variable's value. In this example, bounding box depicts a dog. So, I created a "class" variable with value as "dog".
 	d) file_attributes - This is a dictionary of all the variables defined as file attributes during annotation. The key-value pair in this dictionary is defined by the user. Here, I stored "image_width" denoting the image's width and "image_height" denoting the image's height. In this example, image height is 853px and width is 1280px.
 	
